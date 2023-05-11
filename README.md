@@ -86,7 +86,7 @@ class Transport {
 ```
 Помічені "запахи коду":
 ```
-enum TransportType {
+enum TransportType { /// створити наслідування
   eCar,
   ePlane,
   eSubmarine
@@ -97,7 +97,7 @@ class Transport {
     Transport(TransportType type) : m_type (type) {}
     int GetSpeed(int distance, int time) {
       if (time != 0) { /// заміна на if (time == 0){return 0;}
-        switch(m_type) { /// конструкція switch
+        switch(m_type) { /// конструкція switch буде збільшуватись
           case eCar:
             return distance/time;
           case ePlane:
@@ -109,53 +109,76 @@ class Transport {
     }
 ...
   private:
-    int m_takeOffTime; ///ініціалізація приватних змінних не є коректною
+    int m_takeOffTime; /// відсутні методи доступу до приватних змінних
     int m_landingTime;
     int m_diveTime;
     int m_ascentTime;
-    enum m_type; /// не є приватним
+    enum m_type;
 };
 ```
 Рефакторинг:
-1. Зміна логіки публічного методу;
-2. Заміна конструкції switch;
-3. Написання гетерів для доступу до приватних полів;
-4. Приватні змінні ініціалізовано коректно (int m_takeOffTime = 0;);
-5. Зробити enum m_type приватним шляхом типізації (TransportType m_type;);
+1. Наслідування елементів enum TransportType від класу Transport;
+2. Зміна логіки публічного методу;
+3. Заміна конструкції switch;
+4. Заміна кодування типу класом;
+5. Написання гетерів для доступу до приватних полів;
 ```
-enum class TransportType {
-  eCar,
-  ePlane,
-  eSubmarine
-};
-
 class Transport {
 public:
-  Transport(TransportType type) : m_type(type) {}
-  
-  int GetSpeed(int distance, int time) const {
-    if (time == 0) {
-      return 0;
+    virtual ~Transport() = default;
+    virtual int GetSpeed(int distance, int time) const = 0;
+};
+
+class Car : public Transport {
+public:
+    int GetSpeed(int distance, int time) const override {
+        if (time == 0) {
+            return 0;
+        }
+        return distance / time;
     }
-    if (m_type == TransportType::ePlane) {
-      time -= getTakeOffTime() + getLandingTime();
-    } else if (m_type == TransportType::eSubmarine) {
-      time -= getDiveTime() + getAscentTime();
+};
+
+class Plane : public Transport {
+public:
+    Plane(int takeOffTime, int landingTime) 
+        : m_takeOffTime(takeOffTime), m_landingTime(landingTime) {}
+
+    int GetSpeed(int distance, int time) const override {
+        if (time == 0) {
+            return 0;
+        }
+        time -= GetTakeOffTime() + GetLandingTime();
+        return distance / time;
     }
-    return distance / time;
-  }
+
+    int GetTakeOffTime() const { return m_takeOffTime; }
+    int GetLandingTime() const { return m_landingTime; }
 
 private:
-  TransportType m_type;
-  int m_takeOffTime = 0;
-  int m_landingTime = 0;
-  int m_diveTime = 0;
-  int m_ascentTime = 0;
-  
-  int getTakeOffTime() const { return m_takeOffTime; }
-  int getLandingTime() const { return m_landingTime; }
-  int getDiveTime() const { return m_diveTime; }
-  int getAscentTime() const { return m_ascentTime; }
+    int m_takeOffTime;
+    int m_landingTime;
+};
+
+class Submarine : public Transport {
+public:
+    Submarine(int diveTime, int ascentTime) 
+        : m_diveTime(diveTime), m_ascentTime(ascentTime) {}
+
+    int GetSpeed(int distance, int time) const override {
+        if (time == 0) {
+            return 0;
+        }
+        time -= GetDiveTime() + GetAscentTime();
+        return distance / time;
+    }
+
+    int GetDiveTime() const { return m_diveTime; }
+    int GetAscentTime() const { return m_ascentTime; }
+
+private:
+    int m_diveTime;
+    int m_ascentTime;
 };
 ```
 

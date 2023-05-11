@@ -1,34 +1,57 @@
-enum class TransportType {
-    eCar,
-    ePlane,
-    eSubmarine
+class Transport {
+public:
+    virtual ~Transport() = default;
+    virtual int GetSpeed(int distance, int time) const = 0;
 };
 
-class Transport {
-    public:
-        Transport(TransportType type) : m_type(type) {}
-        
-        int GetSpeed(int distance, int time) const {
-            if (time == 0) {
-                return 0;
-            }
-            if (m_type == TransportType::ePlane) {
-                time -= getTakeOffTime() + getLandingTime();
-            } else if (m_type == TransportType::eSubmarine) {
-                time -= getDiveTime() + getAscentTime();
-            }
-            return distance / time;
+class Car : public Transport {
+public:
+    int GetSpeed(int distance, int time) const override {
+        if (time == 0) {
+            return 0;
         }
+        return distance / time;
+    }
+};
 
-    private:
-        TransportType m_type;
-        int m_takeOffTime = 0;
-        int m_landingTime = 0;
-        int m_diveTime = 0;
-        int m_ascentTime = 0;
-        
-        int getTakeOffTime() const { return m_takeOffTime; }
-        int getLandingTime() const { return m_landingTime; }
-        int getDiveTime() const { return m_diveTime; }
-        int getAscentTime() const { return m_ascentTime; }
+class Plane : public Transport {
+public:
+    Plane(int takeOffTime, int landingTime) 
+        : m_takeOffTime(takeOffTime), m_landingTime(landingTime) {}
+
+    int GetSpeed(int distance, int time) const override {
+        if (time == 0) {
+            return 0;
+        }
+        time -= GetTakeOffTime() + GetLandingTime();
+        return distance / time;
+    }
+
+    int GetTakeOffTime() const { return m_takeOffTime; }
+    int GetLandingTime() const { return m_landingTime; }
+
+private:
+    int m_takeOffTime;
+    int m_landingTime;
+};
+
+class Submarine : public Transport {
+public:
+    Submarine(int diveTime, int ascentTime) 
+        : m_diveTime(diveTime), m_ascentTime(ascentTime) {}
+
+    int GetSpeed(int distance, int time) const override {
+        if (time == 0) {
+            return 0;
+        }
+        time -= GetDiveTime() + GetAscentTime();
+        return distance / time;
+    }
+
+    int GetDiveTime() const { return m_diveTime; }
+    int GetAscentTime() const { return m_ascentTime; }
+
+private:
+    int m_diveTime;
+    int m_ascentTime;
 };
